@@ -3,15 +3,47 @@ const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
+dotenv.config({ path: path.join(__dirname, '..', '.env'), override: true });
 dotenv.config({ path: path.join(__dirname, '..', 'server.env'), override: true });
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'nexushub',
-});
+const createPoolConfig = () => {
+  const hasExplicitDbSettings = Boolean(process.env.DB_HOST || process.env.DB_PORT || process.env.DB_USER || process.env.DB_PASSWORD || process.env.DB_NAME);
+
+  if (hasExplicitDbSettings) {
+    return {
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT || 5432),
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_NAME || 'nexushub',
+    };
+  }
+
+  if (process.env.DATABASE_URL) {
+    try {
+      const parsedUrl = new URL(process.env.DATABASE_URL);
+      return {
+        host: parsedUrl.hostname || 'localhost',
+        port: Number(parsedUrl.port || 5432),
+        user: decodeURIComponent(parsedUrl.username || 'postgres'),
+        password: decodeURIComponent(parsedUrl.password || 'postgres'),
+        database: (parsedUrl.pathname || '').replace(/^\/+/, '') || 'postgres',
+      };
+    } catch (error) {
+      console.warn('Invalid DATABASE_URL, falling back to defaults:', error.message);
+    }
+  }
+
+  return {
+    host: 'localhost',
+    port: 5432,
+    user: 'postgres',
+    password: 'postgres',
+    database: 'nexushub',
+  };
+};
+
+const pool = new Pool(createPoolConfig());
 
 const initDatabase = async () => {
   const client = await pool.connect();

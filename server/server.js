@@ -1,11 +1,13 @@
-require("./config/db");
-
 const path = require('path');
-const app = require('./app');
 const dotenv = require('dotenv');
 
-const envPath = path.join(__dirname, 'server.env');
+const envPath = path.join(__dirname, '.env');
+const serverEnvPath = path.join(__dirname, 'server.env');
 dotenv.config({ path: envPath, override: true });
+dotenv.config({ path: serverEnvPath, override: true });
+
+require('./config/db');
+const app = require('./app');
 
 const initialPort = Number(process.env.PORT || 5000);
 

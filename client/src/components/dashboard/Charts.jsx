@@ -1,9 +1,20 @@
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
+const normalizeChartData = (data) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    return [{ name: 'No data', count: 0 }];
+  }
+
+  return data.map((item) => ({
+    name: item?.name ?? 'Unknown',
+    count: Number(item?.count) || 0,
+  }));
+};
+
 const Charts = ({ membersByDepartment = [], requestsByStatus = [], resourcesByCategory = [] }) => {
-  const requestChartData = requestsByStatus.length > 0 ? requestsByStatus : [{ name: 'No data', count: 0 }];
-  const memberChartData = membersByDepartment.length > 0 ? membersByDepartment : [{ name: 'No data', count: 0 }];
-  const resourceChartData = resourcesByCategory.length > 0 ? resourcesByCategory : [{ name: 'No data', count: 0 }];
+  const requestChartData = normalizeChartData(requestsByStatus);
+  const memberChartData = normalizeChartData(membersByDepartment);
+  const resourceChartData = normalizeChartData(resourcesByCategory);
 
   return (
     <div className='rounded-3xl border border-slate-200 bg-white p-6 shadow-sm'>

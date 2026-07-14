@@ -1,15 +1,16 @@
 -- Seed data for NexusHub
--- Password hash for 'admin123' using bcrypt
+-- Seed users with known demo credentials for local development.
+-- Passwords: admin / 1111, manager / 1111, user / 1111
 INSERT INTO users (username, email, password_hash, name, role, status)
-SELECT 'admin', 'admin@nexushub.com', '$2a$10$BxqxKdDuN0p3DZj7l5qZh.3p0RuUz3PXrGr8D.2Q2qMQWg6M9YVxe', 'Admin User', 'admin', 'active'
+SELECT 'admin', 'admin@nexushub.com', '$2b$10$AWPrrjxRsZ0R28wFtgasuen8/YNY/vjKMqaSCDP8xwupM6lchG/ha', 'Admin User', 'admin', 'active'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 
 INSERT INTO users (username, email, password_hash, name, role, status)
-SELECT 'manager', 'manager@nexushub.com', '$2a$10$BxqxKdDuN0p3DZj7l5qZh.3p0RuUz3PXrGr8D.2Q2qMQWg6M9YVxe', 'Manager User', 'manager', 'active'
+SELECT 'manager', 'manager@nexushub.com', '$2b$10$AWPrrjxRsZ0R28wFtgasuen8/YNY/vjKMqaSCDP8xwupM6lchG/ha', 'Manager User', 'manager', 'active'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'manager');
 
 INSERT INTO users (username, email, password_hash, name, role, status)
-SELECT 'user', 'user@nexushub.com', '$2a$10$BxqxKdDuN0p3DZj7l5qZh.3p0RuUz3PXrGr8D.2Q2qMQWg6M9YVxe', 'Regular User', 'user', 'active'
+SELECT 'user', 'user@nexushub.com', '$2b$10$AWPrrjxRsZ0R28wFtgasuen8/YNY/vjKMqaSCDP8xwupM6lchG/ha', 'Regular User', 'user', 'active'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user');
 
 -- Members

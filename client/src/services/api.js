@@ -1,6 +1,14 @@
-const API_BASE_URL = import.meta.env.DEV
-  ? '/api'
-  : (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+const resolveApiBaseUrl = () => {
+  const configuredUrl = (import.meta.env.VITE_API_URL || '/api').trim();
+
+  if (!configuredUrl || configuredUrl === 'http://localhost:5000' || configuredUrl === 'http://localhost:5000/api') {
+    return '/api';
+  }
+
+  return configuredUrl.replace(/\/$/, '');
+};
+
+const API_BASE_URL = import.meta.env.DEV ? '/api' : resolveApiBaseUrl();
 
 const getToken = () => {
   try {
@@ -30,15 +38,29 @@ const buildUrl = (path) => {
 };
 
 const handleResponse = async (response, fallbackMessage = 'Request failed') => {
-  if (response.ok) {
-    return response.status === 204 ? null : response.json();
+  const text = await response.text().catch(() => '');
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
   }
 
-  const errorText = await response.text().catch(() => '');
-  const message = errorText || `${fallbackMessage} with status ${response.status}`;
+  if (response.ok) {
+    return response.status === 204 ? null : data;
+  }
+
+  const message = typeof data === 'object' && data?.message ? data.message : (text || `${fallbackMessage} with status ${response.status}`);
 
   if (response.status === 401 || response.status === 403) {
     clearSession();
+  }
+
+  if (typeof data === 'object' && data && data.fallback === true) {
+    return data;
   }
 
   throw new Error(message);

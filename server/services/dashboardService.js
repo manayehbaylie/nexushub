@@ -4,6 +4,24 @@ const Resource = require('../models/Resource');
 const Activity = require('../models/Activity');
 const pool = require('../config/db');
 
+const createFallbackSummary = () => ({
+  summary: {
+    totalMembers: 0,
+    totalRequests: 0,
+    totalResources: 0,
+    completedRequests: 0,
+    pendingRequests: 0,
+    inProgressRequests: 0,
+    availableResources: 0,
+    inUseResources: 0,
+    activeMembers: 0,
+  },
+  membersByDepartment: [],
+  requestsByStatus: [],
+  resourcesByCategory: [],
+  recentActivities: [],
+});
+
 const getSummary = async () => {
   try {
     const members = await Member.findAll();
@@ -60,13 +78,13 @@ const getSummary = async () => {
     return {
       summary: {
         totalMembers: members.length,
-        totalRequests: stats.total,
-        totalResources: rStats.total,
-        completedRequests: stats.completed,
-        pendingRequests: stats.pending,
-        inProgressRequests: stats.in_progress,
-        availableResources: rStats.available,
-        inUseResources: rStats.in_use,
+        totalRequests: Number(stats.total || 0),
+        totalResources: Number(rStats.total || 0),
+        completedRequests: Number(stats.completed || 0),
+        pendingRequests: Number(stats.pending || 0),
+        inProgressRequests: Number(stats.in_progress || 0),
+        availableResources: Number(rStats.available || 0),
+        inUseResources: Number(rStats.in_use || 0),
         activeMembers: parseInt(activeCount.count || 0, 10),
       },
       membersByDepartment: membersByDept.rows.map((row) => ({ name: row.name, count: parseInt(row.count, 10) })),
@@ -75,7 +93,8 @@ const getSummary = async () => {
       recentActivities: activities,
     };
   } catch (error) {
-    throw error;
+    console.error('Dashboard summary aggregation failed:', error);
+    return createFallbackSummary();
   }
 };
 

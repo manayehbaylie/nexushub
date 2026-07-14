@@ -22,7 +22,22 @@ const getSummary = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to fetch dashboard summary' });
+    res.status(200).json({
+      members: 0,
+      requests: 0,
+      resources: 0,
+      activities: [],
+      completedRequests: 0,
+      pendingRequests: 0,
+      inProgressRequests: 0,
+      availableResources: 0,
+      inUseResources: 0,
+      activeMembers: 0,
+      membersByDepartment: [],
+      requestsByStatus: [],
+      resourcesByCategory: [],
+      message: 'Dashboard summary temporarily unavailable',
+    });
   }
 };
 
