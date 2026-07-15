@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-
-dotenv.config({ path: path.join(__dirname, '..', '.env'), override: true });
-dotenv.config({ path: path.join(__dirname, '..', 'server.env'), override: true });
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: path.join(__dirname, '..', '.env'), override: false });
+  dotenv.config({ path: path.join(__dirname, '..', 'server.env'), override: false });
+}
 
 const createPoolConfig = () => {
   const hasExplicitDbSettings = Boolean(process.env.DB_HOST || process.env.DB_PORT || process.env.DB_USER || process.env.DB_PASSWORD || process.env.DB_NAME);
