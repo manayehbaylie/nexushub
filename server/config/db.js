@@ -2,37 +2,54 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
+
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config({ path: path.join(__dirname, '..', '.env'), override: false });
   dotenv.config({ path: path.join(__dirname, '..', 'server.env'), override: false });
 }
 
 const createPoolConfig = () => {
-  const hasExplicitDbSettings = Boolean(process.env.DB_HOST || process.env.DB_PORT || process.env.DB_USER || process.env.DB_PASSWORD || process.env.DB_NAME);
+  // production ላይ ከሆንን፣ DATABASE_URL ግድ አለበት — localhost ወደ ኋላ መመለስ የለበትም
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('❌ DATABASE_URL environment variable is missing in production! App cannot start.');
+    }
+
+    const parsedUrl = new URL(process.env.DATABASE_URL);
+    return {
+      host: parsedUrl.hostname,
+      port: Number(parsedUrl.port || 5432),
+      user: decodeURIComponent(parsedUrl.username),
+      password: decodeURIComponent(parsedUrl.password),
+      database: (parsedUrl.pathname || '').replace(/^\/+/, ''),
+      ssl: { rejectUnauthorized: false }, // Render Postgres ብዙ ጊዜ SSL ይፈልጋል
+    };
+  }
+
+  // development (በራስህ ማሽን) ላይ ብቻ - DB_* variables ወይም localhost defaults መጠቀም ይቻላል
+  const hasExplicitDbSettings = Boolean(
+    process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME
+  );
 
   if (hasExplicitDbSettings) {
     return {
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 5432),
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_NAME || 'nexushub',
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME,
     };
   }
 
   if (process.env.DATABASE_URL) {
-    try {
-      const parsedUrl = new URL(process.env.DATABASE_URL);
-      return {
-        host: parsedUrl.hostname || 'localhost',
-        port: Number(parsedUrl.port || 5432),
-        user: decodeURIComponent(parsedUrl.username || 'postgres'),
-        password: decodeURIComponent(parsedUrl.password || 'postgres'),
-        database: (parsedUrl.pathname || '').replace(/^\/+/, '') || 'postgres',
-      };
-    } catch (error) {
-      console.warn('Invalid DATABASE_URL, falling back to defaults:', error.message);
-    }
+    const parsedUrl = new URL(process.env.DATABASE_URL);
+    return {
+      host: parsedUrl.hostname || 'localhost',
+      port: Number(parsedUrl.port || 5432),
+      user: decodeURIComponent(parsedUrl.username || 'postgres'),
+      password: decodeURIComponent(parsedUrl.password || 'postgres'),
+      database: (parsedUrl.pathname || '').replace(/^\/+/, '') || 'postgres',
+    };
   }
 
   return {
@@ -43,13 +60,8 @@ const createPoolConfig = () => {
     database: 'nexushub',
   };
 };
+
 const poolConfig = createPoolConfig();
-console.log('🔍 DEBUG - DATABASE_URL exists:', Boolean(process.env.DATABASE_URL));
-console.log('🔍 DEBUG - DATABASE_URL length:', (process.env.DATABASE_URL || '').length);
-console.log('🔍 DEBUG - Resolved host:', poolConfig.host);
-console.log('🔍 DEBUG - Resolved port:', poolConfig.port);
-console.log('🔍 DEBUG - Resolved database:', poolConfig.database);
-console.log('🔍 DEBUG - NODE_ENV:', process.env.NODE_ENV);
 
 const pool = new Pool(poolConfig);
 
@@ -105,11 +117,3 @@ pool.connect()
   .catch((err) => console.error('❌ Database Connection Error:', err));
 
 module.exports = pool;
-
-
-
-
-
-
-
-
