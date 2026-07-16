@@ -43,8 +43,15 @@ const createPoolConfig = () => {
     database: 'nexushub',
   };
 };
+const poolConfig = createPoolConfig();
+console.log('🔍 DEBUG - DATABASE_URL exists:', Boolean(process.env.DATABASE_URL));
+console.log('🔍 DEBUG - DATABASE_URL length:', (process.env.DATABASE_URL || '').length);
+console.log('🔍 DEBUG - Resolved host:', poolConfig.host);
+console.log('🔍 DEBUG - Resolved port:', poolConfig.port);
+console.log('🔍 DEBUG - Resolved database:', poolConfig.database);
+console.log('🔍 DEBUG - NODE_ENV:', process.env.NODE_ENV);
 
-const pool = new Pool(createPoolConfig());
+const pool = new Pool(poolConfig);
 
 const initDatabase = async () => {
   const client = await pool.connect();
